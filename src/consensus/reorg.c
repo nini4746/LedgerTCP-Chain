@@ -1,9 +1,9 @@
 #include "consensus.h"
 
-ledger_t *reorg_rebuild_ledger(blockchain_t *chain) {
+ledger_t *reorg_rebuild_ledger(blockchain_t *chain, balance_t genesis_balance) {
     if (!chain) return NULL;
 
-    ledger_t *ledger = genesis_init_state();
+    ledger_t *ledger = genesis_init_state_custom(genesis_balance);
     if (!ledger) return NULL;
 
     block_t *block = chain_get_head(chain);
@@ -69,7 +69,7 @@ int reorg_execute(consensus_node_t *node, blockchain_t *new_chain) {
 
     if (!reorg_validate(new_chain)) return -1;
 
-    ledger_t *new_ledger = reorg_rebuild_ledger(new_chain);
+    ledger_t *new_ledger = reorg_rebuild_ledger(new_chain, node->genesis_balance);
     if (!new_ledger) return -1;
 
     blockchain_t *chain_copy = blockchain_clone(new_chain);

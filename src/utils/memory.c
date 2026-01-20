@@ -18,12 +18,14 @@ void *safe_malloc(size_t size) {
 void safe_free(void *ptr) {
     if (ptr) {
         free(ptr);
-        allocation_count--;
+        if (allocation_count > 0) {
+            allocation_count--;
+        }
     }
 }
 
 int memory_check(void) {
-    return (int)allocation_count;
+    return allocation_count > 0 ? (int)allocation_count : 0;
 }
 
 void memory_stats(void) {

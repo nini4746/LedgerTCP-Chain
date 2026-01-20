@@ -25,6 +25,7 @@ typedef struct {
     ledger_t *ledger;
     chain_candidate_t *fork_chains;
     size_t fork_count;
+    balance_t genesis_balance;
 } consensus_node_t;
 
 int consensus_init(void);
@@ -33,7 +34,7 @@ int consensus_process_block(consensus_node_t *node, block_t *block);
 ledger_t *consensus_get_state(consensus_node_t *node);
 bool consensus_verify(consensus_node_t **nodes, int node_count);
 
-consensus_node_t *cnode_create(int node_id);
+consensus_node_t *cnode_create(int node_id, balance_t genesis_balance);
 void cnode_destroy(consensus_node_t *node);
 blockchain_t *cnode_get_chain(consensus_node_t *node);
 ledger_t *cnode_get_ledger(consensus_node_t *node);
@@ -45,7 +46,7 @@ int fork_add_candidate(consensus_node_t *node, blockchain_t *chain, ledger_t *st
 blockchain_t *fork_get_longest(consensus_node_t *node);
 void fork_cleanup(consensus_node_t *node);
 
-ledger_t *reorg_rebuild_ledger(blockchain_t *chain);
+ledger_t *reorg_rebuild_ledger(blockchain_t *chain, balance_t genesis_balance);
 bool reorg_validate(blockchain_t *chain);
 int reorg_rollback(consensus_node_t *node);
 int reorg_commit(consensus_node_t *node, blockchain_t *new_chain, ledger_t *new_ledger);

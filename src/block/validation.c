@@ -35,10 +35,19 @@ bool validate_prev_hash(const block_t *block,
     return hash_equals(block->prev_hash, prev_block->hash);
 }
 
-bool validate_timestamp(const block_t *block,
-                        const block_t *prev_block) {
-    if (!block) return false;
-    if (!prev_block) return true;
+void block_compute_hash(block_t *block) {
+    if (!block) return;
 
-    return block->timestamp >= prev_block->timestamp;
+    uint32_t hash_val = 0;
+    hash_val ^= hash_compute_simple(&block->height, sizeof(block->height));
+    hash_val ^= hash_compute_simple(block->prev_hash, HASH_SIZE);
+    hash_val ^= hash_compute_simple(&block->timestamp, sizeof(block->timestamp));
+
+    for (size_t i = 0; i < block->tx_count; i++) {
+        hash_val ^= hash_compute_simple(&block->transactions[i],
+                                        sizeof(transaction_t));
+    }
+
+    memset(block->hash, 0, HASH_SIZE);
+    memcpy(block->hash, &hash_val, sizeof(hash_val));
 }

@@ -29,25 +29,3 @@ uint32_t hash_compute_simple(const void *data, size_t len) {
 
     return hash;
 }
-
-void block_compute_hash(block_t *block) {
-    if (!block) return;
-
-    uint32_t hash_val = 0;
-
-    hash_val ^= hash_compute_simple(&block->height, sizeof(block->height));
-    hash_val ^= hash_compute_simple(block->prev_hash, HASH_SIZE);
-    hash_val ^= hash_compute_simple(&block->timestamp, sizeof(block->timestamp));
-
-    for (size_t i = 0; i < block->tx_count; i++) {
-        hash_val ^= hash_compute_simple(&block->transactions[i],
-                                        sizeof(transaction_t));
-    }
-
-    memset(block->hash, 0, HASH_SIZE);
-    memcpy(block->hash, &hash_val, sizeof(hash_val));
-
-    for (int i = sizeof(hash_val); i < HASH_SIZE; i++) {
-        block->hash[i] = (uint8_t)((hash_val >> ((i % 4) * 8)) & 0xFF);
-    }
-}

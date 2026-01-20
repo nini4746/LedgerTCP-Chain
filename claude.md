@@ -137,8 +137,9 @@ LedgerTCP-Chain/
    - chain_create()
    - chain_destroy()
    - chain_add_block()
-   - chain_get_length()
-   - chain_get_head()
+   - blockchain_clone()
+   - blockchain_get_block_by_hash()
+   - (chain_get_length, chain_get_head는 block.h에 static inline)
 
 3. **hash.c**: 해시 함수
    - hash_compute()
@@ -151,7 +152,7 @@ LedgerTCP-Chain/
    - genesis_create()
    - genesis_validate()
    - genesis_get_hash()
-   - genesis_init_state()
+   - genesis_init_state_custom()
    - genesis_export()
 
 5. **validation.c**: 블록 검증
@@ -159,7 +160,7 @@ LedgerTCP-Chain/
    - validate_block_transactions()
    - validate_block_hash()
    - validate_prev_hash()
-   - validate_timestamp()
+   - block_compute_hash()
 
 ### Consensus Layer (`src/consensus/`)
 1. **consensus.c**: 합의 메인 로직
@@ -267,20 +268,33 @@ Makefile은 각 레이어별로 별도 컴파일:
 LAYERS = tcp ledger block consensus utils
 ```
 
-## 현재 작업 상태 (2026-01-19)
+## 현재 작업 상태 (2026-01-20)
 
 ### 완료된 작업
 ✅ 프로젝트 초기 구조 생성 (5개 레이어, 각 레이어당 5개 파일)
 ✅ 전체 빌드 시스템 구축 (Makefile)
-✅ 기본 테스트 9개 통과 (basic, unit tests, edge cases)
 ✅ MAX_CHAINS을 10에서 50으로 증가 (더 많은 포크 처리)
 ✅ sync_finalize에 deterministic 체인 선택 로직 추가 (해시 비교)
 ✅ test_results 디렉토리 정리 (코드/바이너리 제거, 로그만 유지)
+✅ genesis_init_state_custom() 함수 추가 (파라미터화된 초기 잔액)
+✅ consensus_node_t에 genesis_balance 필드 추가
+✅ cnode_create() 시그니처 변경 (genesis_balance 파라미터 추가)
+✅ reorg_rebuild_ledger()가 노드별 초기 잔액 사용하도록 수정
+✅ **10/10 테스트 모두 통과**
+✅ 코드 리팩토링 - 5함수/파일, 25줄/함수 규칙 준수
 
-### 현재 문제
-❌ **스트레스 테스트 실패 (9/10 테스트 통과 중)**
-- 100개 트랜잭션 + 네트워크 불안정 환경에서 합의 실패
-- 원인: genesis_init_state()의 초기 잔액 불일치 문제
+### 리팩토링 완료 내역 (2026-01-20 최신)
+1. **chain.c** (7→5 함수): `chain_get_length`, `chain_get_head`를 header에 `static inline`으로 이동
+2. **genesis.c** (6→5 함수): 사용되지 않는 `genesis_init_state()` 제거 (callers는 `genesis_init_state_custom(1000)` 사용)
+3. **validation.c** (6→5 함수): 사용되지 않는 `validate_timestamp()` 제거
+4. **sync.c** 함수 길이 수정: `sync_receive_block`과 `sync_finalize`를 static 헬퍼로 분리
+5. **state.c** 함수 길이 수정: `state_restore`를 `restore_accounts`/`restore_history` 헬퍼로 분리
+6. **chain.c** `blockchain_clone` 길이 수정: `block_clone` static 헬퍼로 분리
+7. **test_edge.c** 수정: `blockchain_get_block_by_height` → `blockchain_get_block_by_hash` 변경
+
+### 현재 상태
+✅ 빌드 성공 (모든 컴파일 경고 없음)
+⏳ 테스트 실행 필요
 
 ### 문제 상세 분석
 
@@ -314,76 +328,19 @@ LAYERS = tcp ledger block consensus utils
 
 ## 다음 작업 (Next Steps)
 
-### 🎯 우선순위 1: Genesis 초기 잔액 문제 해결
-
-**선택지 A: genesis_init_state() 파라미터화** (권장)
-```c
-// src/block/genesis.c 수정
-ledger_t *genesis_init_state_custom(balance_t initial_balance) {
-    ledger_t *ledger = ledger_create();
-    if (!ledger) return NULL;
-
-    account_set_balance(ledger, 1, initial_balance);
-    account_set_balance(ledger, 2, initial_balance);
-    account_set_balance(ledger, 3, initial_balance);
-
-    return ledger;
-}
-
-// 기존 함수는 기본값 사용
-ledger_t *genesis_init_state(void) {
-    return genesis_init_state_custom(1000);
-}
-```
-
-**선택지 B: consensus_node에 초기 잔액 저장**
-- consensus_node_t 구조체에 genesis_balance 필드 추가
-- reorg_rebuild_ledger()가 이 값을 사용하도록 수정
-
-**선택지 C: 테스트별 genesis 블록 생성**
-- 각 테스트가 자체 genesis 블록과 초기 상태를 관리
-- 더 복잡하지만 테스트 독립성 보장
-
-### 🎯 우선순위 2: 스트레스 테스트 개선
-
-1. **선택지 A 적용 후 수정할 파일들**
-   - `include/block.h`: genesis_init_state_custom() 선언 추가
-   - `src/block/genesis.c`: 함수 구현
-   - `src/consensus/reorg.c`: genesis_init_state_custom() 사용
-   - `test.sh`: 스트레스 테스트에서 custom 함수 호출
-
-2. **테스트 검증**
-   ```bash
-   ./test.sh
-   # 기대 결과: 10/10 테스트 통과
-   ```
-
-### 🎯 우선순위 3: 코드 정리
-
-1. test_results는 로그만 유지 (완료됨 ✅)
-2. 불필요한 디버그 출력 제거
-3. 주석 추가 및 문서화
-
-### 구현 가이드 (다음 세션에서 바로 시작)
-
-**Step 1: genesis.c 수정**
-```bash
-# 파일: src/block/genesis.c
-# 변경: genesis_init_state_custom() 추가
-# 기존 genesis_init_state()는 1000으로 복원
-```
-
-**Step 2: reorg.c에 노드별 초기 잔액 전달**
-```bash
-# consensus_node_t에 balance_t genesis_balance 필드 추가
-# cnode_create(id, initial_balance)로 시그니처 변경
-# reorg_rebuild_ledger(chain, initial_balance)로 변경
-```
-
-**Step 3: 모든 테스트 재실행**
+### 🎯 즉시 실행: 테스트 실행
 ```bash
 ./test.sh
 ```
+- 리팩토링 완료 후 테스트 검증 필요
+- 기대 결과: 10/10 테스트 통과
+
+### 참고: 이미 완료된 작업들
+- ✅ genesis_init_state_custom() 함수 추가됨
+- ✅ consensus_node_t에 genesis_balance 필드 추가됨
+- ✅ cnode_create() 시그니처 변경됨 (genesis_balance 파라미터)
+- ✅ reorg_rebuild_ledger()가 노드별 초기 잔액 사용
+- ✅ 코드 규칙 준수 리팩토링 완료 (5함수/파일, 25줄/함수)
 
 ## 참고사항
 

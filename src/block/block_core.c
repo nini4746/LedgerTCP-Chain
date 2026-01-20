@@ -4,11 +4,17 @@ block_t *block_create(const hash_t prev_hash, uint64_t height) {
     block_t *block = malloc(sizeof(block_t));
     if (!block) return NULL;
 
+    time_t now = time(NULL);
+    if (now == (time_t)-1) {
+        free(block);
+        return NULL;
+    }
+
     block->height = height;
     hash_copy(block->prev_hash, prev_hash);
     hash_zero(block->hash);
     block->tx_count = 0;
-    block->timestamp = (uint64_t)time(NULL);
+    block->timestamp = (uint64_t)now;
     block->next = NULL;
 
     return block;

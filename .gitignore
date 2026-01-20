@@ -1,0 +1,26 @@
+# Build artifacts
+obj/
+*.o
+ledger_tcp_chain
+
+# Test binaries and results
+tests/test_*
+!tests/test_*.c
+test_results/
+
+# Editor/IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# State files
+*.state

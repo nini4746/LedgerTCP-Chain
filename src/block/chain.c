@@ -43,12 +43,10 @@ int chain_add_block(blockchain_t *chain, block_t *block) {
     return 0;
 }
 
-size_t chain_get_length(const blockchain_t *chain) {
-    return chain ? chain->length : 0;
-}
-
-block_t *chain_get_head(const blockchain_t *chain) {
-    return chain ? chain->head : NULL;
+static block_t *block_clone(const block_t *src) {
+    block_t *clone = malloc(sizeof(block_t));
+    if (clone) { memcpy(clone, src, sizeof(block_t)); clone->next = NULL; }
+    return clone;
 }
 
 blockchain_t *blockchain_clone(const blockchain_t *chain) {
@@ -57,32 +55,17 @@ blockchain_t *blockchain_clone(const blockchain_t *chain) {
     blockchain_t *clone = chain_create();
     if (!clone) return NULL;
 
-    block_t *current = chain->head;
-    block_t *prev_clone = NULL;
+    block_t *prev = NULL;
+    for (block_t *cur = chain->head; cur; cur = cur->next) {
+        block_t *b = block_clone(cur);
+        if (!b) { chain_destroy(clone); return NULL; }
 
-    while (current) {
-        block_t *block_clone = malloc(sizeof(block_t));
-        if (!block_clone) {
-            chain_destroy(clone);
-            return NULL;
-        }
-
-        memcpy(block_clone, current, sizeof(block_t));
-        block_clone->next = NULL;
-
-        if (!clone->head) {
-            clone->head = block_clone;
-        }
-        if (prev_clone) {
-            prev_clone->next = block_clone;
-        }
-
-        clone->tail = block_clone;
-        prev_clone = block_clone;
+        if (!clone->head) clone->head = b;
+        if (prev) prev->next = b;
+        clone->tail = b;
+        prev = b;
         clone->length++;
-        current = current->next;
     }
-
     return clone;
 }
 
@@ -93,20 +76,6 @@ block_t *blockchain_get_block_by_hash(blockchain_t *chain,
     block_t *current = chain->head;
     while (current) {
         if (hash_equals(current->hash, hash)) {
-            return current;
-        }
-        current = current->next;
-    }
-    return NULL;
-}
-
-block_t *blockchain_get_block_by_height(blockchain_t *chain,
-                                        uint64_t height) {
-    if (!chain) return NULL;
-
-    block_t *current = chain->head;
-    while (current) {
-        if (current->height == height) {
             return current;
         }
         current = current->next;

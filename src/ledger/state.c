@@ -7,15 +7,42 @@ int state_save(const ledger_t *ledger, const char *filename) {
     FILE *f = fopen(filename, "wb");
     if (!f) return -1;
 
-    fwrite(&ledger->account_count, sizeof(size_t), 1, f);
-    fwrite(ledger->accounts, sizeof(account_t),
-           ledger->account_count, f);
+    if (fwrite(&ledger->account_count, sizeof(size_t), 1, f) != 1) goto error;
+    if (ledger->account_count > 0) {
+        if (fwrite(ledger->accounts, sizeof(account_t),
+                   ledger->account_count, f) != ledger->account_count) goto error;
+    }
 
     size_t tx_count = ledger->history->tx_count;
-    fwrite(&tx_count, sizeof(size_t), 1, f);
-    fwrite(ledger->history->tx_ids, sizeof(tx_id_t), tx_count, f);
+    if (fwrite(&tx_count, sizeof(size_t), 1, f) != 1) goto error;
+    if (tx_count > 0) {
+        if (fwrite(ledger->history->tx_ids, sizeof(tx_id_t),
+                   tx_count, f) != tx_count) goto error;
+    }
 
     fclose(f);
+    return 0;
+
+error:
+    fclose(f);
+    return -1;
+}
+
+static int restore_accounts(ledger_t *ledger, FILE *f) {
+    if (fread(&ledger->account_count, sizeof(size_t), 1, f) != 1) return -1;
+    if (ledger->account_count > MAX_ACCOUNTS) return -1;
+    if (ledger->account_count > 0 &&
+        fread(ledger->accounts, sizeof(account_t),
+              ledger->account_count, f) != ledger->account_count) return -1;
+    return 0;
+}
+
+static int restore_history(ledger_t *ledger, FILE *f) {
+    if (fread(&ledger->history->tx_count, sizeof(size_t), 1, f) != 1) return -1;
+    if (ledger->history->tx_count > MAX_TX_HISTORY) return -1;
+    if (ledger->history->tx_count > 0 &&
+        fread(ledger->history->tx_ids, sizeof(tx_id_t),
+              ledger->history->tx_count, f) != ledger->history->tx_count) return -1;
     return 0;
 }
 
@@ -26,18 +53,13 @@ ledger_t *state_restore(const char *filename) {
     if (!f) return NULL;
 
     ledger_t *ledger = ledger_create();
-    if (!ledger) {
+    if (!ledger) { fclose(f); return NULL; }
+
+    if (restore_accounts(ledger, f) != 0 || restore_history(ledger, f) != 0) {
         fclose(f);
+        ledger_destroy(ledger);
         return NULL;
     }
-
-    fread(&ledger->account_count, sizeof(size_t), 1, f);
-    fread(ledger->accounts, sizeof(account_t),
-          ledger->account_count, f);
-
-    fread(&ledger->history->tx_count, sizeof(size_t), 1, f);
-    fread(ledger->history->tx_ids, sizeof(tx_id_t),
-          ledger->history->tx_count, f);
 
     fclose(f);
     return ledger;

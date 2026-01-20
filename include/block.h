@@ -40,8 +40,14 @@ size_t block_serialize(const block_t *block, void *buffer, size_t buffer_size);
 blockchain_t *chain_create(void);
 void chain_destroy(blockchain_t *chain);
 int chain_add_block(blockchain_t *chain, block_t *block);
-size_t chain_get_length(const blockchain_t *chain);
-block_t *chain_get_head(const blockchain_t *chain);
+
+static inline size_t chain_get_length(const blockchain_t *chain) {
+    return chain ? chain->length : 0;
+}
+
+static inline block_t *chain_get_head(const blockchain_t *chain) {
+    return chain ? chain->head : NULL;
+}
 
 void hash_copy(hash_t dest, const hash_t src);
 bool hash_equals(const hash_t a, const hash_t b);
@@ -52,18 +58,16 @@ uint32_t hash_compute_simple(const void *data, size_t len);
 block_t *genesis_create(void);
 bool genesis_validate(const block_t *block);
 void genesis_get_hash(const block_t *genesis, hash_t hash);
-ledger_t *genesis_init_state(void);
+ledger_t *genesis_init_state_custom(balance_t initial_balance);
 int genesis_export(const block_t *genesis, const char *filename);
 
 bool validate_block_structure(const block_t *block);
 bool validate_block_transactions(const block_t *block);
 bool validate_block_hash(const block_t *block);
 bool validate_prev_hash(const block_t *block, const block_t *prev_block);
-bool validate_timestamp(const block_t *block, const block_t *prev_block);
 
 void block_compute_hash(block_t *block);
 block_t *blockchain_get_block_by_hash(blockchain_t *chain, const hash_t hash);
-block_t *blockchain_get_block_by_height(blockchain_t *chain, uint64_t height);
 blockchain_t *blockchain_clone(const blockchain_t *chain);
 
 #endif

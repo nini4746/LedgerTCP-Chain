@@ -1,12 +1,13 @@
 #include "consensus.h"
 
-consensus_node_t *cnode_create(int node_id) {
+consensus_node_t *cnode_create(int node_id, balance_t genesis_balance) {
     consensus_node_t *node = malloc(sizeof(consensus_node_t));
     if (!node) return NULL;
 
     node->node_id = node_id;
+    node->genesis_balance = genesis_balance;
     node->main_chain = chain_create();
-    node->ledger = ledger_create();
+    node->ledger = genesis_init_state_custom(genesis_balance);
     node->fork_chains = NULL;
     node->fork_count = 0;
 

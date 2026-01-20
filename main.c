@@ -40,17 +40,12 @@ int main(void) {
 
     consensus_node_t *nodes[NUM_NODES];
     for (int i = 0; i < NUM_NODES; i++) {
-        nodes[i] = cnode_create(i);
+        nodes[i] = cnode_create(i, 1000);
         if (!nodes[i]) {
             fprintf(stderr, "Failed to create consensus node %d\n", i);
             tcp_simulator_destroy(sim);
             return 1;
         }
-
-        ledger_t *ledger = cnode_get_ledger(nodes[i]);
-        account_set_balance(ledger, 1, 1000);
-        account_set_balance(ledger, 2, 1000);
-        account_set_balance(ledger, 3, 1000);
     }
     printf("Initialized %d consensus nodes with genesis balances\n\n", NUM_NODES);
 

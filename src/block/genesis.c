@@ -16,6 +16,7 @@ bool genesis_validate(const block_t *block) {
     if (block->height != 0) return false;
     if (!hash_is_zero(block->prev_hash)) return false;
     if (block->tx_count != 0) return false;
+    if (hash_is_zero(block->hash)) return false;
     return true;
 }
 
@@ -27,13 +28,13 @@ void genesis_get_hash(const block_t *genesis, hash_t hash) {
     hash_copy(hash, genesis->hash);
 }
 
-ledger_t *genesis_init_state(void) {
+ledger_t *genesis_init_state_custom(balance_t initial_balance) {
     ledger_t *ledger = ledger_create();
     if (!ledger) return NULL;
 
-    account_set_balance(ledger, 1, 10000000);
-    account_set_balance(ledger, 2, 10000000);
-    account_set_balance(ledger, 3, 10000000);
+    account_set_balance(ledger, 1, initial_balance);
+    account_set_balance(ledger, 2, initial_balance);
+    account_set_balance(ledger, 3, initial_balance);
 
     return ledger;
 }

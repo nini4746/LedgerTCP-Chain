@@ -15,8 +15,9 @@ void log_init(const char *filename) {
 static void log_write(log_level_t level, const char *format,
                       va_list args) {
     FILE *out = log_file ? log_file : stdout;
-    const char *level_str[] = {"DEBUG", "INFO", "WARN", "ERROR"};
+    static const char *level_str[] = {"DEBUG", "INFO", "WARN", "ERROR"};
 
+    if (level > LOG_ERROR) level = LOG_ERROR;
     if (level >= min_level) {
         fprintf(out, "[%s] ", level_str[level]);
         vfprintf(out, format, args);

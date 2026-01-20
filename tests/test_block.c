@@ -39,8 +39,8 @@ int main(void) {
     if (chain_add_block(chain, block1) != 0) { printf("FAIL: Add block\n"); failed = 1; }
     if (chain_get_length(chain) != 2) { printf("FAIL: Chain length\n"); failed = 1; }
 
-    block_t *found = blockchain_get_block_by_height(chain, 1);
-    if (!found || found != block1) { printf("FAIL: Find by height\n"); failed = 1; }
+    block_t *found = blockchain_get_block_by_hash(chain, block1->hash);
+    if (!found || found != block1) { printf("FAIL: Find by hash\n"); failed = 1; }
 
     chain_destroy(chain);
     if (failed) return 1;

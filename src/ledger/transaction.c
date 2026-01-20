@@ -46,6 +46,7 @@ int transaction_revert(ledger_t *ledger, const transaction_t *tx) {
     account_t *to = account_find(ledger, tx->to);
 
     if (!from || !to) return -1;
+    if (to->balance < tx->amount) return -1;
 
     to->balance -= tx->amount;
     from->balance += tx->amount;
