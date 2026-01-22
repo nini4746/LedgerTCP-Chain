@@ -1,31 +1,22 @@
 #include "block.h"
 
-void hash_copy(hash_t dest, const hash_t src) {
-    memcpy(dest, src, HASH_SIZE);
+bool hash_is_zero(const hash_t hash)
+{
+	uint8_t zero[HASH_SIZE];
+
+	memset(zero, 0, HASH_SIZE);
+	return memcmp(hash, zero, HASH_SIZE) == 0;
 }
 
-bool hash_equals(const hash_t a, const hash_t b) {
-    return memcmp(a, b, HASH_SIZE) == 0;
-}
+uint32_t hash_compute_simple(const void *data, size_t len)
+{
+	const uint8_t *bytes;
+	uint32_t hash;
+	size_t i;
 
-void hash_zero(hash_t hash) {
-    memset(hash, 0, HASH_SIZE);
-}
-
-bool hash_is_zero(const hash_t hash) {
-    for (int i = 0; i < HASH_SIZE; i++) {
-        if (hash[i] != 0) return false;
-    }
-    return true;
-}
-
-uint32_t hash_compute_simple(const void *data, size_t len) {
-    const uint8_t *bytes = (const uint8_t *)data;
-    uint32_t hash = 5381;
-
-    for (size_t i = 0; i < len; i++) {
-        hash = ((hash << 5) + hash) + bytes[i];
-    }
-
-    return hash;
+	bytes = (const uint8_t *)data;
+	hash = 5381;
+	for (i = 0; i < len; i++)
+		hash = ((hash << 5) + hash) + bytes[i];
+	return hash;
 }

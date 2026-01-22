@@ -1,55 +1,83 @@
 #include "block.h"
 
-block_t *genesis_create(void) {
-    hash_t zero_hash;
-    hash_zero(zero_hash);
+block_t *genesis_create(void)
+{
+	hash_t zero_hash;
+	block_t *genesis;
 
-    block_t *genesis = block_create(zero_hash, 0);
-    if (!genesis) return NULL;
-
-    block_compute_hash(genesis);
-    return genesis;
+	memset(zero_hash, 0, HASH_SIZE);
+	genesis = block_create(zero_hash, 0);
+	if (!genesis)
+	{
+		return NULL;
+	}
+	block_compute_hash(genesis);
+	return genesis;
 }
 
-bool genesis_validate(const block_t *block) {
-    if (!block) return false;
-    if (block->height != 0) return false;
-    if (!hash_is_zero(block->prev_hash)) return false;
-    if (block->tx_count != 0) return false;
-    if (hash_is_zero(block->hash)) return false;
-    return true;
+bool genesis_validate(const block_t *block)
+{
+	if (!block)
+	{
+		return false;
+	}
+	if (block->height != 0)
+	{
+		return false;
+	}
+	if (!hash_is_zero(block->prev_hash))
+	{
+		return false;
+	}
+	if (block->tx_count != 0)
+	{
+		return false;
+	}
+	if (hash_is_zero(block->hash))
+	{
+		return false;
+	}
+	return true;
 }
 
-void genesis_get_hash(const block_t *genesis, hash_t hash) {
-    if (!genesis) {
-        hash_zero(hash);
-        return;
-    }
-    hash_copy(hash, genesis->hash);
+void genesis_get_hash(const block_t *genesis, hash_t hash)
+{
+	if (!genesis)
+	{
+		memset(hash, 0, HASH_SIZE);
+		return;
+	}
+	memcpy(hash, genesis->hash, HASH_SIZE);
 }
 
-ledger_t *genesis_init_state_custom(balance_t initial_balance) {
-    ledger_t *ledger = ledger_create();
-    if (!ledger) return NULL;
+ledger_t *genesis_init_state_custom(balance_t initial_balance)
+{
+	ledger_t *ledger;
 
-    account_set_balance(ledger, 1, initial_balance);
-    account_set_balance(ledger, 2, initial_balance);
-    account_set_balance(ledger, 3, initial_balance);
-
-    return ledger;
+	ledger = ledger_create();
+	if (!ledger)
+		return NULL;
+	account_set_balance(ledger, 1, initial_balance);
+	account_set_balance(ledger, 2, initial_balance);
+	account_set_balance(ledger, 3, initial_balance);
+	return ledger;
 }
 
-int genesis_export(const block_t *genesis, const char *filename) {
-    if (!genesis || !filename) return -1;
+int genesis_export(const block_t *genesis, const char *filename)
+{
+	FILE *f;
 
-    FILE *f = fopen(filename, "w");
-    if (!f) return -1;
-
-    fprintf(f, "Genesis Block\n");
-    fprintf(f, "=============\n");
-    fprintf(f, "Height: %lu\n", genesis->height);
-    fprintf(f, "Timestamp: %lu\n", genesis->timestamp);
-
-    fclose(f);
-    return 0;
+	if (!genesis || !filename)
+		return -1;
+	f = fopen(filename, "w");
+	if (!f)
+	{
+		return -1;
+	}
+	fprintf(f, "Genesis Block\n");
+	fprintf(f, "=============\n");
+	fprintf(f, "Height: %lu\n", genesis->height);
+	fprintf(f, "Timestamp: %lu\n", genesis->timestamp);
+	fclose(f);
+	return 0;
 }

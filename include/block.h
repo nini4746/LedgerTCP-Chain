@@ -49,9 +49,6 @@ static inline block_t *chain_get_head(const blockchain_t *chain) {
     return chain ? chain->head : NULL;
 }
 
-void hash_copy(hash_t dest, const hash_t src);
-bool hash_equals(const hash_t a, const hash_t b);
-void hash_zero(hash_t hash);
 bool hash_is_zero(const hash_t hash);
 uint32_t hash_compute_simple(const void *data, size_t len);
 

@@ -5,11 +5,11 @@ int main(void) {
     int failed = 0;
 
     hash_t hash1, hash2;
-    hash_zero(hash1);
+    memset(hash1, 0, HASH_SIZE);
     if (!hash_is_zero(hash1)) { printf("FAIL: Hash zero\n"); failed = 1; }
 
-    hash_copy(hash2, hash1);
-    if (!hash_equals(hash1, hash2)) { printf("FAIL: Hash copy\n"); failed = 1; }
+    memcpy(hash2, hash1, HASH_SIZE);
+    if (memcmp(hash1, hash2, HASH_SIZE) != 0) { printf("FAIL: Hash copy\n"); failed = 1; }
 
     block_t *genesis = genesis_create();
     if (!genesis || !genesis_validate(genesis) || genesis->height != 0) {

@@ -12,16 +12,26 @@ LEDGER_SRCS = $(wildcard $(SRC_DIR)/ledger/*.c)
 BLOCK_SRCS = $(wildcard $(SRC_DIR)/block/*.c)
 CONSENSUS_SRCS = $(wildcard $(SRC_DIR)/consensus/*.c)
 UTILS_SRCS = $(wildcard $(SRC_DIR)/utils/*.c)
+SIM_SRCS = $(wildcard $(SRC_DIR)/sim/*.c)
+STATE_SRCS = $(wildcard $(SRC_DIR)/state/*.c)
+CHAIN_SRCS = $(wildcard $(SRC_DIR)/chain/*.c)
+SYNC_SRCS = $(wildcard $(SRC_DIR)/sync/*.c)
+MAIN_SRCS = $(wildcard $(SRC_DIR)/main/*.c)
 
-ALL_SRCS = $(TCP_SRCS) $(LEDGER_SRCS) $(BLOCK_SRCS) $(CONSENSUS_SRCS) $(UTILS_SRCS)
+ALL_SRCS = $(TCP_SRCS) $(LEDGER_SRCS) $(BLOCK_SRCS) $(CONSENSUS_SRCS) $(UTILS_SRCS) $(SIM_SRCS) $(STATE_SRCS) $(CHAIN_SRCS) $(SYNC_SRCS) $(MAIN_SRCS)
 
 TCP_OBJS = $(TCP_SRCS:$(SRC_DIR)/tcp/%.c=$(OBJ_DIR)/tcp/%.o)
 LEDGER_OBJS = $(LEDGER_SRCS:$(SRC_DIR)/ledger/%.c=$(OBJ_DIR)/ledger/%.o)
 BLOCK_OBJS = $(BLOCK_SRCS:$(SRC_DIR)/block/%.c=$(OBJ_DIR)/block/%.o)
 CONSENSUS_OBJS = $(CONSENSUS_SRCS:$(SRC_DIR)/consensus/%.c=$(OBJ_DIR)/consensus/%.o)
 UTILS_OBJS = $(UTILS_SRCS:$(SRC_DIR)/utils/%.c=$(OBJ_DIR)/utils/%.o)
+SIM_OBJS = $(SIM_SRCS:$(SRC_DIR)/sim/%.c=$(OBJ_DIR)/sim/%.o)
+STATE_OBJS = $(STATE_SRCS:$(SRC_DIR)/state/%.c=$(OBJ_DIR)/state/%.o)
+CHAIN_OBJS = $(CHAIN_SRCS:$(SRC_DIR)/chain/%.c=$(OBJ_DIR)/chain/%.o)
+SYNC_OBJS = $(SYNC_SRCS:$(SRC_DIR)/sync/%.c=$(OBJ_DIR)/sync/%.o)
+MAIN_OBJS = $(MAIN_SRCS:$(SRC_DIR)/main/%.c=$(OBJ_DIR)/main/%.o)
 
-OBJS = $(TCP_OBJS) $(LEDGER_OBJS) $(BLOCK_OBJS) $(CONSENSUS_OBJS) $(UTILS_OBJS)
+OBJS = $(TCP_OBJS) $(LEDGER_OBJS) $(BLOCK_OBJS) $(CONSENSUS_OBJS) $(UTILS_OBJS) $(SIM_OBJS) $(STATE_OBJS) $(CHAIN_OBJS) $(SYNC_OBJS) $(MAIN_OBJS)
 
 TARGET = $(BIN_DIR)/ledger_tcp_chain
 
@@ -52,6 +62,26 @@ $(OBJ_DIR)/consensus/%.o: $(SRC_DIR)/consensus/%.c
 
 $(OBJ_DIR)/utils/%.o: $(SRC_DIR)/utils/%.c
 	@mkdir -p $(OBJ_DIR)/utils
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(OBJ_DIR)/sim/%.o: $(SRC_DIR)/sim/%.c
+	@mkdir -p $(OBJ_DIR)/sim
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(OBJ_DIR)/state/%.o: $(SRC_DIR)/state/%.c
+	@mkdir -p $(OBJ_DIR)/state
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(OBJ_DIR)/chain/%.o: $(SRC_DIR)/chain/%.c
+	@mkdir -p $(OBJ_DIR)/chain
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(OBJ_DIR)/sync/%.o: $(SRC_DIR)/sync/%.c
+	@mkdir -p $(OBJ_DIR)/sync
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(OBJ_DIR)/main/%.o: $(SRC_DIR)/main/%.c
+	@mkdir -p $(OBJ_DIR)/main
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(OBJ_DIR)/main.o: main.c

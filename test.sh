@@ -137,11 +137,11 @@ int main(void) {
     int failed = 0;
 
     hash_t hash1, hash2;
-    hash_zero(hash1);
+    memset(hash1, 0, HASH_SIZE);
     if (!hash_is_zero(hash1)) { printf("FAIL: Hash zero\n"); failed = 1; }
 
-    hash_copy(hash2, hash1);
-    if (!hash_equals(hash1, hash2)) { printf("FAIL: Hash copy\n"); failed = 1; }
+    memcpy(hash2, hash1, HASH_SIZE);
+    if (memcmp(hash1, hash2, HASH_SIZE) != 0) { printf("FAIL: Hash copy\n"); failed = 1; }
 
     block_t *genesis = genesis_create();
     if (!genesis || !genesis_validate(genesis) || genesis->height != 0) {
@@ -241,9 +241,9 @@ fi
 
 echo -n "Test 2.2: Block unit tests... "
 if gcc -Wall -Wextra -Werror -std=c11 -Iinclude -g $TESTS_DIR/test_block.c \
-    obj/block/*.o obj/ledger/*.o -o $TESTS_DIR/test_block 2>&1 | grep -q error; then
+    obj/block/*.o obj/chain/*.o obj/ledger/*.o -o $TESTS_DIR/test_block 2>&1 | grep -q error; then
     test_result "Block unit tests (compile)" 1
-    gcc -Wall -Wextra -Werror -std=c11 -Iinclude -g $TESTS_DIR/test_block.c obj/block/*.o obj/ledger/*.o -o $TESTS_DIR/test_block
+    gcc -Wall -Wextra -Werror -std=c11 -Iinclude -g $TESTS_DIR/test_block.c obj/block/*.o obj/chain/*.o obj/ledger/*.o -o $TESTS_DIR/test_block
 elif ! $TESTS_DIR/test_block 2>&1; then
     test_result "Block unit tests" 1
     $TESTS_DIR/test_block
@@ -370,7 +370,9 @@ int main(void) {
     // Empty chain operations
     blockchain_t *empty_chain = chain_create();
     if (chain_get_head(empty_chain) != NULL) { printf("FAIL: Empty chain head\n"); failed = 1; }
-    if (blockchain_get_block_by_height(empty_chain, 0) != NULL) { printf("FAIL: Empty chain search\n"); failed = 1; }
+    hash_t zero_hash;
+    memset(zero_hash, 0, HASH_SIZE);
+    if (blockchain_get_block_by_hash(empty_chain, zero_hash) != NULL) { printf("FAIL: Empty chain search\n"); failed = 1; }
 
     // Cleanup
     ledger_destroy(ledger);

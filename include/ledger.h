@@ -65,6 +65,5 @@ int state_save(const ledger_t *ledger, const char *filename);
 ledger_t *state_restore(const char *filename);
 bool state_compare(const ledger_t *a, const ledger_t *b);
 uint64_t state_hash(const ledger_t *ledger);
-int state_export(const ledger_t *ledger, const char *filename);
 
 #endif
